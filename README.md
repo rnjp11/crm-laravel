@@ -7,6 +7,40 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## PDF Laravel
+
+1. composer require barryvdh/laravel-dompdf
+2. config/app.php
+--> 'providers' => [
+    Barryvdh\DomPDF\ServiceProvider::class,
+],
+
+'aliases' => [
+    'PDF' => Barryvdh\DomPDF\Facade\Pdf::class,
+],
+
+3. use Barryvdh\DomPDF\Facade\Pdf;
+
+public function downloadPdf()
+{
+    $data = ['title' => 'Laravel PDF Example'];
+    $pdf = Pdf::loadView('pdf.example', $data);
+    return $pdf->download('example.pdf');
+}
+
+## Mail Laravel
+1. create key and passwords from **app passwords** google
+2. .env file
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.example.com
+MAIL_PORT=587
+MAIL_USERNAME=your@example.com
+MAIL_PASSWORD=yourpassword
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=your@example.com
+MAIL_FROM_NAME="${APP_NAME}"
+
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

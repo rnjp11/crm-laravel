@@ -47,6 +47,9 @@
             background: linear-gradient(135deg, #b24592, #fcafbc);
         }
 
+        .stylish-card.assigned {
+            background: linear-gradient(135deg, #0798e5, #9dc5da);
+        }
         /* Optional: make text readable on light backgrounds */
         .stylish-card h4,
         .stylish-card h5 {
@@ -70,7 +73,7 @@
                 <div class="col-xxl-12 col-xl-12 col-lg-12 box-col-12">
                     <div class="row">
 
-                        <div class="col">
+                        <div class="col-md-3">
                             <div class="card total-sales stylish-card hot">
                                 <div class="card-body">
                                     <div class="row align-items-center">
@@ -93,7 +96,7 @@
                             </div>
 
                         </div>
-                        <div class="col">
+                        <div class="col-md-3">
                             <div class="card total-sales stylish-card warm">
                                 <div class="card-body">
                                     <div class="row align-items-center">
@@ -116,7 +119,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col">
+                        <div class="col-md-3">
                             <div class="card total-sales stylish-card cold">
                                 <div class="card-body">
                                     <div class="row align-items-center">
@@ -139,7 +142,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col">
+                        <div class="col-md-3">
                             <div class="card total-sales stylish-card converted">
                                 <div class="card-body">
                                     <div class="row align-items-center">
@@ -163,7 +166,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col">
+                        <div class="col-md-3">
                             <div class="card total-sales stylish-card cancelled">
                                 <div class="card-body">
                                     <div class="row align-items-center">
@@ -178,6 +181,29 @@
                                                     <div class="dcard">
                                                         <h4 class="mb-1">Cancelled Lead</h4>
                                                         <h5 class="text-muted fw-semibold">{{ $cancelledLeads }}</h5>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card total-sales stylish-card assigned">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <a href="{{ url('enquiry-show?status=Assigned') }}" class=" align-items-center">
+                                            <div class="col-12">
+
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <div class="icon-circle"
+                                                        style="display: flex; justify-content: center;">
+                                                        <i class="fas fa-tasks"></i>
+                                                    </div>
+                                                    <div class="dcard">
+                                                        <h4 class="mb-1">Assign Lead</h4>
+                                                        <h5 class="text-muted fw-semibold">{{ $assignedLeads }}</h5>
                                                     </div>
                                                 </div>
                                             </div>

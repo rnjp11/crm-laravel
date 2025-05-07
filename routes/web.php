@@ -40,7 +40,7 @@ Route::get('logout', [LoginAuthenticator::class, 'logout'])->name('logout');
 Route::controller(DashboardController::class)->group(function () {
     Route::get('/', 'index')->name('dashboard');
     Route::post('/enquiry/update-status', 'updateStatus')->name('enquiry.updateStatus');
-    Route::get('/messages/{enquiryId}','getMessages');
+    Route::get('/messages/{enquiryId}', 'getMessages');
 });
 
 Route::controller(UserController::class)->group(function () {
@@ -84,6 +84,7 @@ Route::controller(EnquiryController::class)->group(function () {
     Route::post('/enquiry/bulk-delete', 'bulkDelete')->name('enquiry.bulkDelete');
     Route::get('/download-enquiries', 'downloadPdf');
     Route::post('/send-enquiry-email', 'sendEnquiryEmail');
+    Route::post('/assign-enquiry', 'assignEnquiry');
 });
 
 Route::controller(EnquiryshowController::class)->group(function () {
@@ -92,4 +93,5 @@ Route::controller(EnquiryshowController::class)->group(function () {
     Route::get('/enquiry-show/{id}/edit', 'edit')->name('enquiry-show.edit');
     Route::put('/enquiry-show/{id}', 'update')->name('enquiry-show.update');
     Route::delete('/enquiry-show/{id}', 'destroy')->name('enquiry-show.delete');
+    Route::post('/view-enquiry', 'view');
 });

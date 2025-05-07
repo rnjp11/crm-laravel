@@ -18,6 +18,8 @@ class EnquiryshowController extends Controller
         if (!session()->has('userid')) {
             redirect('/login')->send();
         }
+        $userid = session()->get('userid');
+
         $status = $request->query('status') ?? '';
         if ($status == "Hot" || $status == "Warm" || $status == "Cold") {
             $enquiries = DB::table('enquiries')
@@ -31,6 +33,7 @@ class EnquiryshowController extends Controller
                     'cities.name as city_name'
                 )->where('enquiries.type', $status)
                 ->whereNotIn('enquiries.status', ['Cancelled', 'Converted'])
+                ->where('user_id', $userid)
                 ->get();
         } elseif ($status == "Cancelled" || $status == "Converted") {
             $enquiries = DB::table('enquiries')
@@ -45,6 +48,27 @@ class EnquiryshowController extends Controller
                     'cities.name as city_name',
                     'users.name as user_name'
                 )->where('enquiries.status', $status)
+                ->where('user_id', $userid)
+                ->get();
+        } elseif ($status == "Assigned") {
+            $enquiries = DB::table('enquiries')
+                ->leftJoin('services', 'enquiries.service', '=', 'services.id')
+                ->leftJoin('references', 'enquiries.reference', '=', 'references.id')
+                ->leftJoin('cities', 'enquiries.city', '=', 'cities.id')
+                ->leftJoin('users as converted_user', 'enquiries.converted_by', '=', 'converted_user.id')
+                ->leftJoin('users as assigned_to_user', 'enquiries.assigned_to', '=', 'assigned_to_user.id')
+                ->leftJoin('users as assigned_by_user', 'enquiries.assigned_by', '=', 'assigned_by_user.id')
+                ->select(
+                    'enquiries.*',
+                    'services.name as service_name',
+                    'references.name as reference_name',
+                    'cities.name as city_name',
+                    'converted_user.name as converted_user_name',
+                    'assigned_to_user.name as assigned_to_name',
+                    'assigned_by_user.name as assigned_by_name'
+                )
+                ->where('assigned_to', $userid)
+                ->orWhere('assigned_by', $userid)
                 ->get();
         } else {
             $enquiries = [];
@@ -53,11 +77,12 @@ class EnquiryshowController extends Controller
         $services = DB::table('services')->where('status', 'Active')->get();
         $references = DB::table('references')->where('status', 'Active')->get();
         $cities = DB::table('cities')->where('status', 'Active')->get();
+        $users = DB::table('users')->get();
 
         $userid = session()->get('userid');
-        $iseditable = session()->get('roleid') == 2;
+        $iseditable = true;
 
-        return view('enquiry-show', compact('enquiries', 'services', 'references', 'cities', 'userid', 'status', 'iseditable'));
+        return view('enquiry-show', compact('enquiries', 'services', 'references', 'cities', 'userid', 'status', 'iseditable', 'users'));
     }
 
 

@@ -97,7 +97,10 @@
                                                                 onclick="openEmailModal('{{ $enquiry->id }}', '{{ $enquiry->email }}','{{ $enquiry->date }}')">
                                                                 <i class="fas fa-message"></i>
                                                             </button>
-
+                                                            <button type="button" class="btn btn-dark"
+                                                                onclick="openAssignModal('{{ $enquiry->id }}')">
+                                                                <i class="fas fa-tasks"></i>
+                                                            </button>
                                                         </td>
                                                     </tr>
                                                 @empty
@@ -241,6 +244,38 @@
                     </div>
                 </div>
 
+                <!-- Assign Task Modal -->
+                <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <form id="assignForm">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Assign Task</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <input type="hidden" id="assignBy" value="{{ $userid }}">
+                                    <input type="hidden" id="enquiryassignId">
+                                    <div class="col-md-12">
+                                        <label class="form-label" for="assignTo">Users</label>
+                                        <select class="form-control" id="assignTo" name="assignTo">
+                                            @foreach ($users as $user)
+                                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-primary">Assign Task</button>
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Cancel</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -332,8 +367,6 @@
 
             });
             return false;
-
-
         }
 
         function deleteData(id) {
@@ -414,6 +447,11 @@
             $('#emailModal').modal('show');
         }
 
+        function openAssignModal(id) {
+            $('#enquiryassignId').val(id);
+            $('#assignModal').modal('show');
+        }
+
         $('#emailForm').on('submit', function(e) {
             e.preventDefault();
 
@@ -450,6 +488,37 @@
                 success: function(response) {
                     alert(response.message);
                     $('#emailModal').modal('hide');
+                },
+                error: function(xhr) {
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        alert("Error: " + xhr.responseJSON.message);
+                    } else {
+                        alert("An unknown error occurred.");
+                    }
+                }
+            });
+        });
+
+        $('#assignForm').on('submit', function(e) {
+            e.preventDefault();
+
+            let assignBy = $('#assignBy').val();
+            let assignTo = $('#assignTo').val();
+            let enquiryassignId = $('#enquiryassignId').val();
+
+            $.ajax({
+                url: `{{ url('assign-enquiry') }}`,
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    id: enquiryassignId,
+                    assignBy: assignBy,
+                    assignTo: assignTo
+                },
+                success: function(response) {
+                    alert(response.message);
+                    $('#assignModal').modal('hide');
+                    window.location.reload();
                 },
                 error: function(xhr) {
                     if (xhr.responseJSON && xhr.responseJSON.message) {

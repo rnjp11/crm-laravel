@@ -20,7 +20,9 @@ class Enquiry extends Model
         'status',
         'user_id',
         'reason',
-        'converted_by'
+        'converted_by',
+        'assigned_to',
+        'assigned_by'
     ];
     use HasFactory;
 }

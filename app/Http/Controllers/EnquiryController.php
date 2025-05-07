@@ -38,8 +38,9 @@ class EnquiryController extends Controller
         $services = DB::table('services')->where('status', 'Active')->get();
         $references = DB::table('references')->where('status', 'Active')->get();
         $cities = DB::table('cities')->where('status', 'Active')->get();
+        $users = DB::table('users')->whereNot('id', $userid)->get();
 
-        return view('enquiry', compact('enquiries', 'services', 'references', 'cities', 'userid'));
+        return view('enquiry', compact('enquiries', 'services', 'references', 'cities', 'userid', 'users'));
     }
 
     // Insert
@@ -175,6 +176,21 @@ class EnquiryController extends Controller
         } catch (\Exception $e) {
             Log::error('Mail sending failed: ' . $e->getMessage());
             return response()->json(['status' => 0, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+    public function assignEnquiry(Request $request)
+    {
+        $enquiry = Enquiry::findOrFail($request->id);
+        $enquiry->assigned_by = $request->assignBy;
+        $enquiry->assigned_to = $request->assignTo;
+        $enquiry->user_id = $request->assignTo;
+
+        $updated = $enquiry->save(); // returns true if changes were made
+
+        if ($updated) {
+            return response()->json(['status' => 1, 'message' => 'Task Assigned successfully']);
+        } else {
+            return response()->json(['status' => 0, 'message' => 'Something went wrong!']);
         }
     }
 }

@@ -19,20 +19,28 @@ class DashboardController extends Controller
         $userid = session()->get('userid');
         $hotLeads = Enquiry::where('type', 'Hot')
             ->whereNotIn('status', ['Cancelled', 'Converted'])
+            ->where('user_id', $userid)
             ->count();
         // dd($hotLeads);
 
         $warmLeads = Enquiry::where('type', 'Warm')
             ->whereNotIn('status', ['Cancelled', 'Converted'])
+            ->where('user_id', $userid)
             ->count();
 
         $coldLeads = Enquiry::where('type', 'Cold')
             ->whereNotIn('status', ['Cancelled', 'Converted'])
+            ->where('user_id', $userid)
+            ->count();
+        $convertedLeads = Enquiry::where('status', 'Converted')
+            ->where('user_id', $userid)
             ->count();
 
-        $convertedLeads = Enquiry::where('status', 'Converted')->count();
-
-        $cancelledLeads = Enquiry::where('status', 'Cancelled')->count();
+        $cancelledLeads = Enquiry::where('status', 'Cancelled')
+            ->where('user_id', $userid)
+            ->count();
+            
+        $assignedLeads = Enquiry::where('assigned_by', $userid)->orwhere('assigned_to', $userid)->count();
 
         $today = Carbon::today(); // today's date (00:00:00)
         $todayEnquiry = Enquiry::where('status', 'left')->whereDate('date', '<=', $today)->where('user_id', $userid)->get();
@@ -44,7 +52,7 @@ class DashboardController extends Controller
             ->where('user_id', $userid)
             ->get();
 
-        return view('index', compact('hotLeads', 'warmLeads', 'coldLeads', 'convertedLeads', 'cancelledLeads', 'todayEnquiry', 'monthEnquiry', 'userid'));
+        return view('index', compact('hotLeads', 'warmLeads', 'coldLeads', 'convertedLeads', 'cancelledLeads', 'assignedLeads', 'todayEnquiry', 'monthEnquiry', 'userid'));
     }
 
     public function updateStatus(Request $request)

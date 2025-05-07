@@ -1,7 +1,7 @@
 @extends('layout')
 @section('content')
     <style>
-       
+
     </style>
     <div class="pt-4">
         <div class="page-body row">
@@ -14,7 +14,6 @@
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <h4> {{ $status }} Enquiries List</h4>
-                                        {{--  --}}
                                     </div><br />
                                     <div class="list-product table table-responsive">
                                         <table class="table " id="enquiryTable">
@@ -32,6 +31,10 @@
                                                     @endif
                                                     @if ($status == 'Cancelled')
                                                         <th><span>Reason</span></th>
+                                                    @endif
+                                                    @if ($status == 'Assigned')
+                                                        <th><span>Assigned To</span></th>
+                                                        <th><span>Assigned By</span></th>
                                                     @endif
                                                     <th> <span>Action</span></th>
                                                 </tr>
@@ -52,21 +55,35 @@
                                                         @if ($status == 'Cancelled')
                                                             <td><span>{{ $enquiry->reason }}</span></td>
                                                         @endif
+                                                        @if ($status == 'Assigned')
+                                                            <td><span>{{ $enquiry->assigned_to_name }}</span></td>
+                                                            <td><span>{{ $enquiry->assigned_by_name }}</span></td>
+                                                        @endif
                                                         <td class="d-flex gap-1">
                                                             <button class="btn btn-primary"
                                                                 onclick="editData({{ $enquiry->id }})"
                                                                 {{ $iseditable ? '' : 'disabled' }}>
                                                                 <i class="fas fa-pencil"></i>
                                                             </button>
-                                                            <button type="submit" class="btn btn-danger"
+                                                            {{-- <button type="submit" class="btn btn-danger"
                                                                 onclick="deleteData({{ $enquiry->id }})"
                                                                 {{ $iseditable ? '' : 'disabled' }}>
                                                                 <i class="fas fa-trash"></i>
-                                                            </button>
-                                                            <button type="submit" class="btn btn-warning"
-                                                                {{ $iseditable ? '' : 'disabled' }}>
-                                                                <i class="fas fa-message"></i>
-                                                            </button>
+                                                            </button> --}}
+                                                            @if (in_array($status, ['Hot', 'Warm', 'Cold']))
+                                                                <button class="btn btn-success"
+                                                                    onclick="updateStatus({{ $enquiry->id }}, 'Converted')">
+                                                                    <i class="fas fa-check"></i>
+                                                                </button>
+                                                                <button type="button" class="btn btn-danger"
+                                                                    onclick="updateStatus({{ $enquiry->id }}, 'Cancelled', '{{ $enquiry->name }}')">
+                                                                    <i class="fas fa-times"></i>
+                                                                </button>
+                                                            @endif
+                                                            {{-- <button class="btn btn-info"
+                                                                onclick="viewmodal({{ $enquiry->id }})">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button> --}}
                                                         </td>
                                                     </tr>
                                                 @empty
@@ -170,6 +187,54 @@
                         </div>
                     </div>
                 </div>
+
+
+                <!-- Cancel Modal -->
+                <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Cancel Enquiry</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="hidden" id="cancelEnquiryId">
+                                <div class="mb-3">
+                                    <label>Name</label>
+                                    <input type="text" class="form-control" id="cancelEnquiryName" disabled>
+                                </div>
+                                <div class="mb-3">
+                                    <label>Reason</label>
+                                    <textarea id="cancelReason" class="form-control" placeholder="Enter reason for cancellation"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button class="btn btn-danger" onclick="submitCancelForm()">Submit</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Show enquiry modal --}}
+                <div class="modal fade" id="viewmodal" tabindex="-1" aria-labelledby="viewModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5>Enquiry Details</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                        </div>
+                        <div class="modal-body">
+                            <table>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -266,6 +331,84 @@
                     }
                 });
             }
+        }
+
+        function updateStatus(id, status, name = '') {
+            if (status === 'Cancelled') {
+                $('#cancelEnquiryId').val(id);
+                $('#cancelEnquiryName').val(name);
+                $('#cancelModal').modal('show');
+            } else {
+                var data = {
+                    id: id,
+                    status: status,
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                };
+                $.ajax({
+                    url: '{{ route('enquiry.updateStatus') }}',
+                    type: 'POST',
+                    data: data,
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            location.reload();
+                        } else {
+                            alert(response.message);
+                        }
+                    }
+                });
+            }
+        }
+
+        function submitCancelForm() {
+            var id = $('#cancelEnquiryId').val();
+            var reason = $('#cancelReason').val();
+            var data = {
+                id: id,
+                status: 'Cancelled',
+                reason: reason,
+                _token: $('meta[name="csrf-token"]').attr('content'),
+            }
+            $.ajax({
+                url: '{{ route('enquiry.updateStatus') }}',
+                type: 'POST',
+                data: data,
+                success: function(response) {
+                    if (response.success) {
+                        $('#cancelModal').modal('hide');
+                        location.reload();
+                    } else {
+                        alert('Failed to cancel enquiry');
+                    }
+                }
+            });
+        }
+
+        function viewmodal(id) {
+            $.ajax({
+                type: 'post',
+                url: `url('view-enquiry')`,
+                data: {
+                    id: id
+                },
+                success: function(data) {
+                    enquirydata = `<tr>
+                        <td>${data.id}</td>
+                        <td>${data.name}</td>
+                        <td>${data.email}</td>
+                        <td>${data.mobile}</td>
+                        <td>${data.service}</td>
+                        <td>${data.reference}</td>
+                        <td>${data.city}</td>
+                        <td>${data.date}</td>
+                        <td>${data.type}</td>
+                     </tr>`;
+                    $('#viewenquiry').html(enquirydata);
+                },
+                error: function(e) {
+                    alert(e.responseText);
+                }
+            })
         }
         $(document).ready(function() {
             $('#enquiryTable').DataTable({

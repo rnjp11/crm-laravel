@@ -80,10 +80,18 @@
                                                                     <i class="fas fa-times"></i>
                                                                 </button>
                                                             @endif
-                                                            {{-- <button class="btn btn-info"
+                                                            <button class="btn btn-info"
                                                                 onclick="viewmodal({{ $enquiry->id }})">
                                                                 <i class="fas fa-eye"></i>
-                                                            </button> --}}
+                                                            </button>
+
+                                                            @if (in_array($status, ['Hot', 'Warm', 'Cold']))
+                                                                <button type="button" class="btn btn-dark"
+                                                                    onclick="openAssignModal('{{ $enquiry->id }}')">
+                                                                    <i class="fas fa-tasks"></i>
+                                                                </button>
+                                                            @endif
+
                                                         </td>
                                                     </tr>
                                                 @empty
@@ -225,14 +233,46 @@
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5>Enquiry Details</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body" id="viewenquiry" style="overflow-y: auto; height:450px; ">
                             </div>
                         </div>
-                        <div class="modal-body">
-                            <table>
+                    </div>
+                </div>
 
-                            </table>
-                        </div>
+                <!-- Assign Task Modal -->
+                <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <form id="assignForm">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Assign Task</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <input type="hidden" id="assignBy" value="{{ $userid }}">
+                                    <input type="hidden" id="enquiryassignId">
+                                    <div class="col-md-12">
+                                        <label class="form-label" for="assignTo">Users</label>
+                                        <select class="form-control" id="assignTo" name="assignTo">
+                                            @foreach ($users as $user)
+                                                @if ($user->id != $userid)
+                                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-primary">Assign Task</button>
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Cancel</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -387,29 +427,56 @@
         function viewmodal(id) {
             $.ajax({
                 type: 'post',
-                url: `url('view-enquiry')`,
+                url: "{{ url('view-enquiry') }}",
                 data: {
-                    id: id
+                    id: id,
+                    _token: '{{ csrf_token() }}'
                 },
                 success: function(data) {
-                    enquirydata = `<tr>
-                        <td>${data.id}</td>
-                        <td>${data.name}</td>
-                        <td>${data.email}</td>
-                        <td>${data.mobile}</td>
-                        <td>${data.service}</td>
-                        <td>${data.reference}</td>
-                        <td>${data.city}</td>
-                        <td>${data.date}</td>
-                        <td>${data.type}</td>
-                     </tr>`;
-                    $('#viewenquiry').html(enquirydata);
+                    $('#viewenquiry').html(data);
+                    $('#viewmodal').modal('show');
+
                 },
                 error: function(e) {
                     alert(e.responseText);
                 }
             })
         }
+
+        function openAssignModal(id) {
+            $('#enquiryassignId').val(id);
+            $('#assignModal').modal('show');
+        }
+        $('#assignForm').on('submit', function(e) {
+            e.preventDefault();
+
+            let assignBy = $('#assignBy').val();
+            let assignTo = $('#assignTo').val();
+            let enquiryassignId = $('#enquiryassignId').val();
+
+            $.ajax({
+                url: `{{ url('assign-enquiry') }}`,
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    id: enquiryassignId,
+                    assignBy: assignBy,
+                    assignTo: assignTo
+                },
+                success: function(response) {
+                    alert(response.message);
+                    $('#assignModal').modal('hide');
+                    window.location.reload();
+                },
+                error: function(xhr) {
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        alert("Error: " + xhr.responseJSON.message);
+                    } else {
+                        alert("An unknown error occurred.");
+                    }
+                }
+            });
+        });
         $(document).ready(function() {
             $('#enquiryTable').DataTable({
                 "pageLength": 10,

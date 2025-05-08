@@ -93,5 +93,5 @@ Route::controller(EnquiryshowController::class)->group(function () {
     Route::get('/enquiry-show/{id}/edit', 'edit')->name('enquiry-show.edit');
     Route::put('/enquiry-show/{id}', 'update')->name('enquiry-show.update');
     Route::delete('/enquiry-show/{id}', 'destroy')->name('enquiry-show.delete');
-    Route::post('/view-enquiry', 'view');
+    Route::post('/view-enquiry', 'viewmodal');
 });

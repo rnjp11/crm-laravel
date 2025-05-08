@@ -97,6 +97,10 @@
                                                                 onclick="openEmailModal('{{ $enquiry->id }}', '{{ $enquiry->email }}','{{ $enquiry->date }}')">
                                                                 <i class="fas fa-message"></i>
                                                             </button>
+                                                            <button class="btn btn-info"
+                                                                onclick="viewmodal({{ $enquiry->id }})">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
                                                             <button type="button" class="btn btn-dark"
                                                                 onclick="openAssignModal('{{ $enquiry->id }}')">
                                                                 <i class="fas fa-tasks"></i>
@@ -276,6 +280,21 @@
                     </div>
                 </div>
 
+                {{-- Show enquiry modal --}}
+                <div class="modal fade" id="viewmodal" tabindex="-1" aria-labelledby="viewModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5>Enquiry Details</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body" id="viewenquiry" style="overflow-y: auto; height:450px; ">
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -452,6 +471,24 @@
             $('#assignModal').modal('show');
         }
 
+        function viewmodal(id) {
+            $.ajax({
+                type: 'post',
+                url: "{{ url('view-enquiry') }}",
+                data: {
+                    id: id,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(data) {
+                    $('#viewenquiry').html(data);
+                    $('#viewmodal').modal('show');
+
+                },
+                error: function(e) {
+                    alert(e.responseText);
+                }
+            })
+        }
         $('#emailForm').on('submit', function(e) {
             e.preventDefault();
 

@@ -129,4 +129,29 @@ class EnquiryshowController extends Controller
 
         return response()->json(['message' => 'Deleted']);
     }
+
+    public function viewmodal(Request $request)
+    {
+        // dd($request->id);
+        $enquiry = Enquiry::findOrFail($request->id);
+        $service = DB::table('services')->where('id', $enquiry->service)->value('name');
+        $references = DB::table('references')->where('id', $enquiry->reference)->value('name');
+        $city = DB::table('cities')->where('id', $enquiry->city)->value('name');
+        if ($enquiry) {
+            $response = <<<HTML
+                <table class="table table-bordered">
+                    <tr><th>Name</th><td>{$enquiry->name}</td></tr>
+                    <tr><th>Email</th><td>{$enquiry->email}</td></tr>
+                    <tr><th>Mobile</th><td>{$enquiry->mobile}</td></tr>
+                    <tr><th>Service</th><td>{$service}</td></tr>
+                    <tr><th>Reference</th><td>{$references}</td></tr>
+                    <tr><th>City</th><td>{$city}</td></tr>
+                    <tr><th>Follow up date</th><td>{$enquiry->date}</td></tr>
+                    <tr><th>Type</th><td>{$enquiry->type}</td></tr>
+                </table>
+            HTML;
+        }
+
+        return $response;
+    }
 }

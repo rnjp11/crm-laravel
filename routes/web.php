@@ -40,7 +40,6 @@ Route::get('logout', [LoginAuthenticator::class, 'logout'])->name('logout');
 Route::controller(DashboardController::class)->group(function () {
     Route::get('/', 'index')->name('dashboard');
     Route::post('/enquiry/update-status', 'updateStatus')->name('enquiry.updateStatus');
-    Route::get('/messages/{enquiryId}', 'getMessages');
 });
 
 Route::controller(UserController::class)->group(function () {

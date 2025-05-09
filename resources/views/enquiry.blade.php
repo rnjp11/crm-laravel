@@ -60,12 +60,12 @@
                                                     <th><input type="checkbox" id="selectAll"
                                                             class="form-check-input checkbox-primary enquiry-checkbox"></th>
                                                     <th> <span class="">Name</span></th>
-                                                    <th> <span class="">Email</span></th>
+                                                    {{-- <th> <span class="">Email</span></th> --}}
                                                     <th> <span class="">Mobile</span></th>
-                                                    <th> <span class="">Service</span></th>
-                                                    <th> <span class="">Reference</span></th>
+                                                    {{-- <th> <span class="">Service</span></th> --}}
+                                                    {{-- <th> <span class="">Reference</span></th> --}}
                                                     <th> <span class="">City</span></th>
-                                                    <th> <span class="">Type</span></th>
+                                                    {{-- <th> <span class="">Type</span></th> --}}
                                                     <th> <span class="">Follow-up date</span></th>
                                                     <th> <span class="">Action</span></th>
                                                 </tr>
@@ -77,12 +77,12 @@
                                                                 class="form-check-input checkbox-primary enquiry-checkbox"
                                                                 value="{{ $enquiry->id }}"></td>
                                                         <td>{{ $enquiry->name }}</td>
-                                                        <td>{{ $enquiry->email }}</td>
+                                                        {{-- <td>{{ $enquiry->email }}</td> --}}
                                                         <td>{{ $enquiry->mobile }}</td>
-                                                        <td>{{ $enquiry->service_name }}</td>
-                                                        <td>{{ $enquiry->reference_name }}</td>
+                                                        {{-- <td>{{ $enquiry->service_name }}</td> --}}
+                                                        {{-- <td>{{ $enquiry->reference_name }}</td> --}}
                                                         <td>{{ $enquiry->city_name }}</td>
-                                                        <td>{{ $enquiry->type }}</td>
+                                                        {{-- <td>{{ $enquiry->type }}</td> --}}
                                                         <td>{{ $enquiry->date }}</td>
                                                         <td class="d-flex gap-1">
                                                             <button class="btn btn-primary"
@@ -127,17 +127,19 @@
                     aria-hidden="true">
                     <div class="modal-dialog modal-lg">
                         <div class="modal-content">
+                            <div class="modal-header bg-light mb-3">
+                                <h5 class="modal-title" id="enquiryModalLabel">Add Enquiry</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
                             <form id="enquiryForm" method="POST">
                                 @csrf
                                 <input type="hidden" id="enquiry_id" name="enquiry_id">
+                                <input type="hidden" id="user_id" name="user_id" value="{{ $userid }}">
 
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="enquiryModalLabel">Add Enquiry</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
-                                </div>
 
-                                <div class="modal-body row g-3">
+
+                                <div class="modal-body row g-3" style="overflow-y:auto; height:400px;">
                                     <div class="col-md-6">
                                         <label class="form-label" for="name">Name</label>
                                         <input class="form-control" id="name" name="name" type="text"
@@ -195,6 +197,23 @@
                                     <div class="col-md-6">
                                         <label class="form-label" for="date">Follow-up Date</label>
                                         <input class="form-control" id="date" name="date" type="date">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label" for="description">Description</label>
+                                        <textarea class="form-control" id="description" name="description" type="text" placeholder="Enter description"></textarea>
+                                    </div>
+                                    <div class="col-md-12 table-responsive" id="messageTable">
+                                        <table class="table table-border" border="2">
+                                            <thead>
+                                                <tr>
+                                                    <th>Followup Date:</th>
+                                                    <th>Description:</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="descriptiontable">
+
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
 
@@ -290,7 +309,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                     aria-label="Close"></button>
                             </div>
-                            <div class="modal-body" id="viewenquiry" style="overflow-y: auto; height:450px; ">
+                            <div class="modal-body" id="viewenquiry" style="overflow-y: auto; height:400px; ">
                             </div>
                         </div>
                     </div>
@@ -307,6 +326,7 @@
         });
 
         function addEnquiry() {
+            $('#messageTable').hide();
             $('#enquiryForm')[0].reset();
             $('#enquiry_id').val('');
             $('#enquiryModalLabel').text('Add Enquiry');
@@ -318,26 +338,50 @@
                 url: `{{ url('enquiry') }}/${id}/edit`,
                 type: 'GET',
                 success: function(data) {
+                    const enquiry = data.enquiry;
+                    const messages = data.messages;
+
                     $('#enquiryModalLabel').text('Edit Enquiry');
-                    $('#enquiry_id').val(data.id);
-                    $('#name').val(data.name);
-                    $('#email').val(data.email);
-                    $('#mobile').val(data.mobile);
-                    $('#service').val(data.service);
-                    $('#reference').val(data.reference);
-                    $('#city').val(data.city);
-                    $('#date').val(data.date);
+                    $('#enquiry_id').val(enquiry.id);
+                    $('#name').val(enquiry.name);
+                    $('#email').val(enquiry.email);
+                    $('#mobile').val(enquiry.mobile);
+                    $('#service').val(enquiry.service);
+                    $('#reference').val(enquiry.reference);
+                    $('#city').val(enquiry.city);
+                    $('#date').val(enquiry.date);
+
+                    // Build message table
+                    let messageRows = '';
+                    if (messages) {
+                        messages.forEach((msg, index) => {
+                            messageRows += `
+                            <tr>
+                                <td>${msg.followup_date}</td>
+                                <td>${msg.message}</td>
+                                </tr>
+                                `;
+                        });
+                    } else {
+                        messageRows += `
+                            <tr>
+                                <td colspan=2 >No messages till now</td>
+                                </tr>
+                                `;
+                    }
+
+                    $('#descriptiontable').html(messageRows);
 
                     $('#enquiryModal').modal('show');
                 }
             });
         }
 
+
         function submitForm() {
             let id = $('#enquiry_id').val();
             let url = id ? `{{ url('enquiry') }}/${id}` : "{{ route('enquiry.add') }}";
             let type = id ? 'PUT' : 'POST';
-
 
 
             let data = {
@@ -350,6 +394,7 @@
                 'city': $('#city').val(),
                 'type': $('#type').val(),
                 'date': $('#date').val(),
+                'description': $('#description').val(),
                 '_token': '{{ csrf_token() }}'
             }
 

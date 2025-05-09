@@ -20,15 +20,15 @@
                                             <thead class="table-light">
                                                 <tr>
                                                     <th> <span>Name</span></th>
-                                                    <th> <span>Email</span></th>
+                                                    {{-- <th> <span>Email</span></th> --}}
                                                     <th> <span>Mobile</span></th>
-                                                    <th> <span>Service</span></th>
-                                                    <th> <span>Reference</span></th>
+                                                    {{-- <th> <span>Service</span></th> --}}
+                                                    {{-- <th> <span>Reference</span></th> --}}
                                                     <th> <span>City</span></th>
                                                     <th> <span>Follow-up date</span></th>
-                                                    @if ($status == 'Converted' || $status == 'Cancelled')
+                                                    {{-- @if ($status == 'Converted' || $status == 'Cancelled')
                                                         <th><span>Updated by</span></th>
-                                                    @endif
+                                                    @endif --}}
                                                     @if ($status == 'Cancelled')
                                                         <th><span>Reason</span></th>
                                                     @endif
@@ -43,15 +43,15 @@
                                                 @forelse ($enquiries as $enquiry)
                                                     <tr class="product-removes">
                                                         <td>{{ $enquiry->name }}</td>
-                                                        <td>{{ $enquiry->email }}</td>
+                                                        {{-- <td>{{ $enquiry->email }}</td> --}}
                                                         <td>{{ $enquiry->mobile }}</td>
-                                                        <td>{{ $enquiry->service_name }}</td>
-                                                        <td>{{ $enquiry->reference_name }}</td>
+                                                        {{-- <td>{{ $enquiry->service_name }}</td> --}}
+                                                        {{-- <td>{{ $enquiry->reference_name }}</td> --}}
                                                         <td>{{ $enquiry->city_name }}</td>
                                                         <td>{{ $enquiry->date }}</td>
-                                                        @if ($status == 'Converted' || $status == 'Cancelled')
+                                                        {{-- @if ($status == 'Converted' || $status == 'Cancelled')
                                                             <td><span>{{ $enquiry->user_name }}</span></td>
-                                                        @endif
+                                                        @endif --}}
                                                         @if ($status == 'Cancelled')
                                                             <td><span>{{ $enquiry->reason }}</span></td>
                                                         @endif
@@ -70,7 +70,7 @@
                                                                 {{ $iseditable ? '' : 'disabled' }}>
                                                                 <i class="fas fa-trash"></i>
                                                             </button> --}}
-                                                            @if (in_array($status, ['Hot', 'Warm', 'Cold']))
+                                                            @if (in_array($status, ['Hot', 'Warm', 'Cold','Assigned']))
                                                                 <button class="btn btn-success"
                                                                     onclick="updateStatus({{ $enquiry->id }}, 'Converted')">
                                                                     <i class="fas fa-check"></i>
@@ -124,7 +124,7 @@
                                         aria-label="Close"></button>
                                 </div>
 
-                                <div class="modal-body row g-3">
+                                <div class="modal-body row g-3" style="overflow-y: auto; height:450px">
                                     <div class="col-md-6">
                                         <label class="form-label" for="name">Name</label>
                                         <input class="form-control" id="name" name="name" type="text"
@@ -182,6 +182,23 @@
                                     <div class="col-md-6">
                                         <label class="form-label" for="date">Follow-up Date</label>
                                         <input class="form-control" id="date" name="date" type="date">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label" for="description">Description</label>
+                                        <textarea class="form-control" id="description" name="description" type="text" placeholder="Enter description"></textarea>
+                                    </div>
+                                    <div class="col-md-12 table-responsive" id="messageTable">
+                                        <table class="table table-border" border="2">
+                                            <thead>
+                                                <tr>
+                                                    <th>Followup Date:</th>
+                                                    <th>Description:</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="descriptiontable">
+
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
 
@@ -291,14 +308,39 @@
                 url: `{{ url('enquiry-show') }}/${id}/edit`,
                 type: 'GET',
                 success: function(data) {
-                    $('#enquiry_id').val(data.id);
-                    $('#name').val(data.name);
-                    $('#email').val(data.email);
-                    $('#mobile').val(data.mobile);
-                    $('#service').val(data.service);
-                    $('#reference').val(data.reference);
-                    $('#city').val(data.city);
-                    $('#date').val(data.date);
+                    const enquiry = data.enquiry;
+                    const messages = data.messages;
+
+                    $('#enquiryModalLabel').text('Edit Enquiry');
+                    $('#enquiry_id').val(enquiry.id);
+                    $('#name').val(enquiry.name);
+                    $('#email').val(enquiry.email);
+                    $('#mobile').val(enquiry.mobile);
+                    $('#service').val(enquiry.service);
+                    $('#reference').val(enquiry.reference);
+                    $('#city').val(enquiry.city);
+                    $('#date').val(enquiry.date);
+
+                    // Build message table
+                    let messageRows = '';
+                    if (messages) {
+                        messages.forEach((msg, index) => {
+                            messageRows += `
+                            <tr>
+                                <td>${msg.followup_date}</td>
+                                <td>${msg.message}</td>
+                                </tr>
+                                `;
+                        });
+                    } else {
+                        messageRows += `
+                            <tr>
+                                <td colspan=2 >No messages till now</td>
+                                </tr>
+                                `;
+                    }
+
+                    $('#descriptiontable').html(messageRows);
 
                     $('#enquiryModal').modal('show');
                 }
@@ -320,6 +362,7 @@
                 'city': $('#city').val(),
                 'type': $('#type').val(),
                 'date': $('#date').val(),
+                'description': $('#description').val(),
                 '_token': '{{ csrf_token() }}'
             }
 

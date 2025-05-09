@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\cr;
 use App\Models\Enquiry;
+use App\Models\Message;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -90,7 +91,12 @@ class EnquiryshowController extends Controller
     public function edit($id)
     {
         $enquiry = Enquiry::findOrFail($id);
-        return response()->json($enquiry);
+        $messages = Message::where('customer_id', $id)->get();
+
+        return response()->json([
+            'enquiry' => $enquiry,
+            'messages' => $messages
+        ]);
     }
 
     // Update
@@ -113,7 +119,13 @@ class EnquiryshowController extends Controller
 
         $enquiry = Enquiry::findOrFail($id);
         $updated = $enquiry->update($request->only('name', 'email', 'mobile', 'service', 'reference', 'city', 'type', 'date'));
-
+        if ($request->description != "") {
+            Message::create([
+                'customer_id'   => $request->id,
+                'message'       => $request->description,
+                'followup_date' => $request->date,
+            ]);
+        }
         if ($updated) {
             return response()->json(['status' => 1, 'message' => 'Enquiry updated successfully']);
         } else {
@@ -137,7 +149,21 @@ class EnquiryshowController extends Controller
         $service = DB::table('services')->where('id', $enquiry->service)->value('name');
         $references = DB::table('references')->where('id', $enquiry->reference)->value('name');
         $city = DB::table('cities')->where('id', $enquiry->city)->value('name');
+        $messages = DB::table('messages')->where('customer_id', $request->id)->select('followup_date', 'message')->get();
         if ($enquiry) {
+            $messageHtml = '';
+            if (count($messages)) {
+                foreach ($messages as $msg) {
+                    $messageHtml .= "<div>
+                        <strong>Follow-up Date:</strong> {$msg->followup_date}<br>
+                        <strong>Message:</strong> {$msg->message}
+                        <hr>
+                    </div>";
+                }
+            } else {
+                $messageHtml = "<em>No messages yet.</em>";
+            }
+
             $response = <<<HTML
                 <table class="table table-bordered">
                     <tr><th>Name</th><td>{$enquiry->name}</td></tr>
@@ -146,11 +172,13 @@ class EnquiryshowController extends Controller
                     <tr><th>Service</th><td>{$service}</td></tr>
                     <tr><th>Reference</th><td>{$references}</td></tr>
                     <tr><th>City</th><td>{$city}</td></tr>
-                    <tr><th>Follow up date</th><td>{$enquiry->date}</td></tr>
+                    <tr><th>Follow-up Date</th><td>{$enquiry->date}</td></tr>
                     <tr><th>Type</th><td>{$enquiry->type}</td></tr>
+                    <tr><th>Description</th><td>{$messageHtml}</td></tr>
                 </table>
             HTML;
         }
+
 
         return $response;
     }

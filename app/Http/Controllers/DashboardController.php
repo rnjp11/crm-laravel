@@ -80,9 +80,5 @@ class DashboardController extends Controller
         return response()->json(['success' => true, 'message' => 'Status updated']);
     }
 
-    public function getMessages($enquiryId)
-    {
-        $messages = Message::where('customer_id', $enquiryId)->get(['followup_date', 'message']);
-        return response()->json($messages);
-    }
+ 
 }

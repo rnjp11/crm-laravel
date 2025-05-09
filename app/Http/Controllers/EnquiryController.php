@@ -46,29 +46,41 @@ class EnquiryController extends Controller
     // Insert
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email',
-            'mobile' => 'required|max:10|unique:enquiries,mobile',
-            'service' => 'required',
-            'reference' => 'required',
-            'city' => 'required',
-            'date' => 'required',
-            'type' => 'nullable|in:Hot,Warm,Cold',
-        ], [
-            'mobile.unique' => 'The mobile number already exists.',
-        ]);
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'email' => 'nullable|email',
+                'mobile' => 'required|max:10|unique:enquiries,mobile',
+                'service' => 'required',
+                'reference' => 'required',
+                'city' => 'required',
+                'date' => 'required',
+                'type' => 'nullable|in:Hot,Warm,Cold',
+                'user_id' => 'required|exists:users,id',
+            ], [
+                'mobile.unique' => 'The mobile number already exists.',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
 
-        $save = Enquiry::create($request->only('name', 'email', 'mobile', 'service', 'reference', 'city', 'type', 'date', 'user_id'));
+            $save = Enquiry::create($request->only('name', 'email', 'mobile', 'service', 'reference', 'city', 'type', 'date', 'user_id'));
 
-        if ($save) {
-            return response()->json(['status' => 1, 'message' => 'Enquiry saved successfully']);
-        } else {
-            return response()->json(['status' => 0, 'message' => 'Something went wrong!']);
+            if ($save) {
+                Message::create([
+                    'customer_id'   => $save->id,
+                    'message'       => $request->description,
+                    'followup_date' => $request->date
+                ]);
+
+                return response()->json(['status' => 1, 'message' => 'Enquiry saved successfully']);
+            } else {
+                return response()->json(['status' => 0, 'message' => 'Something went wrong!']);
+            }
+        } catch (\Exception $e) {
+            Log::error('Enquiry store error: ' . $e->getMessage());
+            return response()->json(['status' => 0, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
 
@@ -76,8 +88,14 @@ class EnquiryController extends Controller
     public function edit($id)
     {
         $enquiry = Enquiry::findOrFail($id);
-        return response()->json($enquiry);
+        $messages = Message::where('customer_id', $id)->get();
+
+        return response()->json([
+            'enquiry' => $enquiry,
+            'messages' => $messages
+        ]);
     }
+
 
     // Update
     public function update(Request $request, $id)
@@ -102,6 +120,13 @@ class EnquiryController extends Controller
         $enquiry = Enquiry::findOrFail($id);
         $updated = $enquiry->update($request->only('name', 'email', 'mobile', 'service', 'reference', 'city', 'type', 'date'));
 
+        if ($request->description != "") {
+            Message::create([
+                'customer_id'   => $request->id,
+                'message'       => $request->description,
+                'followup_date' => $request->date,
+            ]);
+        }
         if ($updated) {
             return response()->json(['status' => 1, 'message' => 'Enquiry updated successfully']);
         } else {

@@ -256,10 +256,10 @@
                                                                     onclick="updateStatus({{ $enquiry->id }}, 'Pending')">
                                                                     <i class="fas fa-hourglass-half"></i>
                                                                 </button>
-                                                                <button type="button" class="btn btn-info messageBtn"
-                                                                    data-id="{{ $enquiry->id }}">
-                                                                    <i class="fas fa-message"></i>
-                                                                </button>
+                                                                <button class="btn btn-info"
+                                                                onclick="viewmodal({{ $enquiry->id }})">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
 
                                                             </td>
                                                         </tr>
@@ -316,10 +316,10 @@
                                                                     onclick="updateStatus({{ $enquiry->id }}, 'Cancelled', '{{ $enquiry->name }}')">
                                                                     <i class="fas fa-times"></i>
                                                                 </button>
-                                                                <button type="submit" class="btn btn-info messageBtn"
-                                                                    data-id="{{ $enquiry->id }}">
-                                                                    <i class="fas fa-message"></i>
-                                                                </button>
+                                                                <button class="btn btn-info"
+                                                                onclick="viewmodal({{ $enquiry->id }})">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
                                                             </td>
                                                         </tr>
                                                     @empty
@@ -392,6 +392,22 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Show enquiry modal --}}
+            <div class="modal fade" id="viewmodal" tabindex="-1" aria-labelledby="viewModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5>Enquiry Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="viewenquiry" style="overflow-y: auto; height:450px; ">
+                    </div>
+                </div>
+            </div>
+        </div>
 
         </div>
         <!-- Container-fluid Ends-->
@@ -467,49 +483,25 @@
                 }
             });
         }
+        function viewmodal(id) {
+            $.ajax({
+                type: 'post',
+                url: "{{ url('view-enquiry') }}",
+                data: {
+                    id: id,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(data) {
+                    $('#viewenquiry').html(data);
+                    $('#viewmodal').modal('show');
 
-        // function showMessagesModal(enquiryId, enquiryName) {
-        //     // Set modal title dynamically
-        //     $('#messageModalTitle').text(`Messages for ${enquiryName}`);
-
-        //     // Perform AJAX request to fetch messages
-        //     $.ajax({
-        //         url: `/get-messages/${enquiryId}`, // The URL with the dynamic enquiryId
-        //         type: 'GET', // Using GET request to fetch messages
-        //         success: function(response) {
-        //             alert("hii");
-        //             const tbody = $('#messagesTableBody');
-        //             tbody.empty(); // Clear previous data
-
-        //             if (response.length === 0) {
-        //                 // If no messages, display a "No data found" message
-        //                 tbody.append('<tr><td colspan="2" class="text-center">No messages found.</td></tr>');
-        //             } else {
-        //                 // Populate the table with the messages from the response
-        //                 response.forEach(function(msg) {
-        //                     tbody.append(`
-    //                     <tr>
-    //                         <td>${msg.followup_date}</td>
-    //                         <td>${msg.message}</td>
-    //                     </tr>
-    //                 `);
-        //                 });
-        //             }
-
-        //             // Show the modal
-        //             $('#messageModal').modal('show');
-        //         },
-        //         error: function(xhr, status, error) {
-        //             const tbody = $('#messagesTableBody');
-        //             tbody.empty(); // Clear previous data
-
-        //             tbody.append('<tr><td colspan="2" class="text-center">No messages found.</td></tr>');
-        //             $('#messageModal').modal('show');
-        //             console.error('Error fetching messages:', error);
-        //         }
-        //     });
-        // }
-
+                },
+                error: function(e) {
+                    alert(e.responseText);
+                }
+            })
+        }
+       
         $(document).on('click', '.messageBtn', function() {
             let enquiryId = $(this).data('id');
             $.ajax({
